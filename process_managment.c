@@ -15,7 +15,7 @@ int main(){
     const int SIZE = 4096;
 
     int shm_fd;
-    void *ptr;
+    char *ptr;
 
     pid_t pid;
     pid = fork();
@@ -41,11 +41,15 @@ int main(){
         //create the char array to hold string
         char line[LINE_LEN] = "";
 
-        while (fgets(line, LINE_LEN, fptr)){
-            //writes to shared mem
-            strcpy(ptr, line);
-            ptr += strlen(line) + 1;    
-            //printf( "%s", line);
+        while (!feof(fptr)){
+        
+        	if (fgets(line,LINE_LEN, fptr) != NULL){
+        		
+        		sprintf(ptr, "%s", line);
+        		ptr += strlen(line);
+        	
+        	}
+        
         }
         
         //closes the file
@@ -64,22 +68,74 @@ int main(){
 
         shm_fd = shm_open(name, O_RDONLY, 0666);
 
-        ptr = (char*) mmap(0, SIZE, PROT_READ, MAP_SHARED, shm_fd, 0);
+        ptr = (char *) mmap(0, SIZE, PROT_READ, MAP_SHARED, shm_fd, 0);
+        
+        char *dArr[1];
+        char *bytes = ptr;
+        int i = 0;
+        int j = 0; 
+        char temp[100];
+
+        while (bytes[i] != '\0'){
+
+            if (bytes[i] == '\n'){
+
+                dArr[j]= malloc(strlen(temp) + 1 * sizeof(char *));
+                strcpy(dArr[j], temp);
+                //dArr[j] = temp;
+                //printf("%s\n", dArr[j]);
+                temp[0] = '\0';
+                j += 1;
+    			
+            }else {
+                strncat(temp, &bytes[i], 1);
+            }
+                i += 1;
+            }
+
+        j = 0;
+        //display(dArr, ptr, 64);
+        printf("%s \n", dArr[1]);
+		
+
+
+
+		//removes the shared memory object
+        shm_unlink(name);
+
         //printf("%s", (char*)ptr);
-		
-		int i = 1;
-		
-		
-		while (i <= 5){
-			printf("%s \n",ptr );
-			ptr += strlen(ptr) +1;
-			i += 1;
-		}
-		
-        //printf("%s", TEMP);
 
 
     }
     return 0;
+}
+
+
+void display(char **array, char *bytes, int n){
+    //printf("display: sfwf::\n");
+    //printf("\n");
+
+    int i = 0;
+    int j = 0; 
+    char temp[100];
+    while (bytes[i] != '\0'){
+
+        if (bytes[i] == '\n'){
+
+            array[j] = malloc(strlen(temp) + 1 * sizeof(char));
+            array[j] = temp;
+            //printf("%s", temp);
+            temp[0] = '\0';
+            j += 1;
+
+        }else {
+
+            strncat(temp, &bytes[i], 1);
+        }
+
+        i += 1;
+
+    }
+
 
 }
